@@ -9,6 +9,8 @@ import logger from "./utils/logger.util.js";
 import errorHandler from "./middleware/errorHandler.middleware.js";
 import validateToken from "./middleware/auth.middleware.js";
 
+import "dotenv/config";
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
