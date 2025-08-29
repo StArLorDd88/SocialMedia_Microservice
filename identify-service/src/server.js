@@ -4,10 +4,8 @@ import helmet from "helmet";
 import Redis from "ioredis"
 import rateLimit from "express-rate-limit"
 import RedisStore from "rate-limit-redis"
-import proxy from "express-http-proxy"
 import logger from "./utils/logger.util.js";
 import errorHandler from "./middleware/errorHandler.middleware.js";
-import validateToken from "./middleware/auth.middleware.js";
 import mongoose from "mongoose";
 import RateLimiterRedis from "rate-limiter-flexible";
 
