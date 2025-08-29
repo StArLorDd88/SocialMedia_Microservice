@@ -1,5 +1,6 @@
-import jwt from "jsonwebtoken"
-import logger from "../utils/logger.util.js";
+import jwt from "jsonwebtoken";
+import logger from "../utils/logger.js";
+
 
 const validateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
@@ -27,4 +28,4 @@ const validateToken = (req, res, next) => {
   });
 };
 
-export default validateToken
+export default validateToken;

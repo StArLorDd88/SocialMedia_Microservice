@@ -9,7 +9,7 @@ import errorHandler from "./middleware/errorHandler.middleware.js";
 import mongoose from "mongoose";
 import RateLimiterRedis from "rate-limiter-flexible";
 
-import "dotenv/config";
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;

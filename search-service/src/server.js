@@ -1,4 +1,3 @@
-import "dotenv/config";
 import express from "express";
 import mongoose from "mongoose";
 import Redis from "ioredis";
@@ -9,6 +8,8 @@ import logger from "./utils/logger.js";
 import { connectToRabbitMQ, consumeEvent } from "./utils/rabbitmq.js";
 import searchRoutes from "./routes/search-routes.js";
 import { handlePostCreated, handlePostDeleted } from "./eventHandlers/search-event-handlers.js";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3004;

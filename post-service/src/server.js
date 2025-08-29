@@ -8,7 +8,7 @@ import errorHandler from "./middleware/errorHandler.js";
 import logger from "./utils/logger.js";
 import { connectToRabbitMQ } from "./utils/rabbitmq.js";
 
-import "dotenv/config";
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3002;

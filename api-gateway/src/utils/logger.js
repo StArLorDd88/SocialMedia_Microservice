@@ -1,4 +1,4 @@
-import winston from "winston"
+import winston from "winston";
 
 const logger = winston.createLogger({
   level: process.env.NODE_ENV === "production" ? "info" : "debug",
@@ -21,4 +21,4 @@ const logger = winston.createLogger({
   ],
 });
 
-export default logger
+export default logger;
