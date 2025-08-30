@@ -1,0 +1,104 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_HUB_USERNAME = credentials('dockerhub-username')
+        DOCKER_HUB_PASSWORD = credentials('dockerhub-password')
+        KUBECONFIG_CRED     = credentials('eks-kubeconfig')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/StArLorDd88/SocialMedia_Microservice.git'
+            }
+        }
+
+        stage('Build & Push Docker Images') {
+            parallel {
+                stage('API Gateway') {
+                    steps {
+                        script {
+                            sh """
+                                docker build -t ${DOCKER_HUB_USERNAME}/apigateway:latest ./api-gateway
+                                echo "${DOCKER_HUB_PASSWORD}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+                                docker push ${DOCKER_HUB_USERNAME}/apigateway:latest
+                            """
+                        }
+                    }
+                }
+                stage('Post Service') {
+                    steps {
+                        script {
+                            sh """
+                                docker build -t ${DOCKER_HUB_USERNAME}/post-service:latest ./post-service
+                                echo "${DOCKER_HUB_PASSWORD}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+                                docker push ${DOCKER_HUB_USERNAME}/post-service:latest
+                            """
+                        }
+                    }
+                }
+                stage('Media Service') {
+                    steps {
+                        script {
+                            sh """
+                                docker build -t ${DOCKER_HUB_USERNAME}/media-service:latest ./media-service
+                                echo "${DOCKER_HUB_PASSWORD}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+                                docker push ${DOCKER_HUB_USERNAME}/media-service:latest
+                            """
+                        }
+                    }
+                }
+                stage('Identify Service') {
+                    steps {
+                        script {
+                            sh """
+                                docker build -t ${DOCKER_HUB_USERNAME}/identify-service:latest ./identify-service
+                                echo "${DOCKER_HUB_PASSWORD}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+                                docker push ${DOCKER_HUB_USERNAME}/identify-service:latest
+                            """
+                        }
+                    }
+                }
+                stage('Search Service') {
+                    steps {
+                        script {
+                            sh """
+                                docker build -t ${DOCKER_HUB_USERNAME}/search-service:latest ./search-service
+                                echo "${DOCKER_HUB_PASSWORD}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+                                docker push ${DOCKER_HUB_USERNAME}/search-service:latest
+                            """
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                script {
+                    // Save kubeconfig from Jenkins credentials
+                    writeFile file: 'kubeconfig.yaml', text: KUBECONFIG_CRED
+                    withEnv(["KUBECONFIG=${WORKSPACE}/kubeconfig.yaml"]) {
+                        sh """
+                            kubectl apply -f k8s/namespace.yaml
+                            kubectl apply -f k8s/api-gateway/deployment.yaml
+                            kubectl apply -f k8s/api-gateway/service.yaml
+                            kubectl apply -f k8s/post-service/deployment.yaml
+                            kubectl apply -f k8s/post-service/service.yaml
+                            kubectl apply -f k8s/media-service/deployment.yaml
+                            kubectl apply -f k8s/media-service/service.yaml
+                            kubectl apply -f k8s/identify-service/deployment.yaml
+                            kubectl apply -f k8s/identify-service/service.yaml
+                            kubectl apply -f k8s/search-service/deployment.yaml
+                            kubectl apply -f k8s/search-service/service.yaml
+                            kubectl apply -f k8s/redis/deployment.yaml
+                            kubectl apply -f k8s/redis/service.yaml
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
