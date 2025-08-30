@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: socialmedia
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: your-dockerhub-username/api-gateway:latest
+          ports:
+            - containerPort: 3030
+          env:
+            - name: POST_SERVICE_URL
+              value: http://post-service:3002
+            - name: IDENTIFY_SERVICE_URL
+              value: http://identify-service:3001
+            - name: MEDIA_SERVICE_URL
+              value: http://media-service:3003
+            - name: SEARCH_SERVICE_URL
+              value: http://search-service:3004
+            - name: REDIS_HOST
+              value: redis
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
