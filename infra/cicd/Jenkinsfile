@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/StArLorDd88/SocialMedia_Microservice.git'
+                    url: 'https://github.com/StArLorDd88/SocialMedia_k8_CICD.git'
             }
         }
 
