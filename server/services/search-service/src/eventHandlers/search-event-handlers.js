@@ -1,4 +1,4 @@
-import Search from "../models/Search";
+import Search from "../models/Search.js";
 import logger from "../utils/logger.js";
 
 async function handlePostCreated(event) {

@@ -1,4 +1,4 @@
-import Search from "../models/Search";
+import Search from "../models/Search.js";
 import logger from "../utils/logger.js";
 
 //implement caching here for 2 to 5 min

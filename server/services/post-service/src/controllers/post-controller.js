@@ -1,4 +1,4 @@
-import Post from "../models/Post";
+import Post from "../models/Post.js";
 import logger from "../utils/logger.js";
 import { publishEvent } from "../utils/rabbitmq.js";
 import { validateCreatePost } from "../utils/validation.js";
