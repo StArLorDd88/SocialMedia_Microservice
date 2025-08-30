@@ -1,6 +1,5 @@
-variable "kubernetes_version" {
-  default     = "1.29"
-  description = "Kubernetes version for EKS"
+locals {
+  cluster_name = "SocialMedia-${random_string.suffix.result}"
 }
 
 variable "vpc_cidr" {
@@ -11,4 +10,9 @@ variable "vpc_cidr" {
 variable "aws_region" {
   default     = "ap-south-1"
   description = "AWS region"
+}
+
+variable "key_name" {
+  description = "EC2 Key Pair name for worker nodes"
+  type        = string
 }
