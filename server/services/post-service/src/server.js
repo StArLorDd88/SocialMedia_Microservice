@@ -13,7 +13,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3002;
 
-//connect to mongodb
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => logger.info("Connected to mongodb"))
@@ -21,7 +20,6 @@ mongoose
 
 const redisClient = new Redis(process.env.REDIS_URL);
 
-//middleware
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
@@ -32,9 +30,18 @@ app.use((req, res, next) => {
   next();
 });
 
-//*** Homework - implement Ip based rate limiting for sensitive endpoints
+const sensitiveLimiter = rateLimit({
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.call(...args),
+  }),
+  windowMs: 15 * 60 * 1000,
+  max: 10, 
+  message: "Too many requests from this IP, please try again later.",
+  keyGenerator: (req) => req.ip,
+});
 
-//routes -> pass redisclient to routes
+app.use("/api/posts/sensitive", sensitiveLimiter);
+
 app.use(
   "/api/posts",
   (req, res, next) => {
@@ -49,6 +56,7 @@ app.use(errorHandler);
 async function startServer() {
   try {
     await connectToRabbitMQ();
+    
     app.listen(PORT, () => {
       logger.info(`Post service running on port ${PORT}`);
     });

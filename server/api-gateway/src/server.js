@@ -10,6 +10,7 @@ import validateToken from "./middleware/authMiddleware.js";
 import errorHandler from "./middleware/errorhandler.js";
 import logger from "./utils/logger.js";
 
+
 dotenv.config();
 
 const app = express();

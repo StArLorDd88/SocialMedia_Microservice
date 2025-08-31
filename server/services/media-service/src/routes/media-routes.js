@@ -10,7 +10,6 @@ const logger = require("../utils/logger");
 
 const router = express.Router();
 
-//configure multer for file upload
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {

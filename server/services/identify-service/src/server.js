@@ -8,13 +8,13 @@ import logger from "./utils/logger.util.js";
 import errorHandler from "./middleware/errorHandler.middleware.js";
 import mongoose from "mongoose";
 import RateLimiterRedis from "rate-limiter-flexible";
+import routes from "./routes/identity.router.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-//connect to mongodb
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => logger.info("Connected to mongodb"))
@@ -22,7 +22,6 @@ mongoose
 
 const redisClient = new Redis(process.env.REDIS_URL);
 
-//middleware
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
@@ -33,7 +32,6 @@ app.use((req, res, next) => {
   next();
 });
 
-//DDos protection and rate limiting
 const rateLimiter = new RateLimiterRedis({
   storeClient: redisClient,
   keyPrefix: "middleware",
@@ -51,7 +49,6 @@ app.use((req, res, next) => {
     });
 });
 
-//Ip based rate limiting for sensitive endpoints
 const sensitiveEndpointsLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 50,
@@ -66,7 +63,6 @@ const sensitiveEndpointsLimiter = rateLimit({
   }),
 });
 
-//apply this sensitiveEndpointsLimiter to our routes
 app.use("/api/auth/register", sensitiveEndpointsLimiter);
 
 //Routes
@@ -79,7 +75,6 @@ app.listen(PORT, () => {
   logger.info(`Identity service running on port ${PORT}`);
 });
 
-//unhandled promise rejection
 
 process.on("unhandledRejection", (reason, promise) => {
   logger.error("Unhandled Rejection at", promise, "reason:", reason);

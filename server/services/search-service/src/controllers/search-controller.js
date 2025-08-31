@@ -18,6 +18,7 @@ const searchPostController = async (req, res) => {
       .sort({ score: { $meta: "textScore" } })
       .limit(10);
 
+    logger.info(`Found ${results.length} posts for query: ${query}`);
     res.json(results);
   } catch (e) {
     logger.error("Error while searching post", error);

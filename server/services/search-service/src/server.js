@@ -1,6 +1,5 @@
 import express from "express";
 import mongoose from "mongoose";
-import Redis from "ioredis";
 import cors from "cors";
 import helmet from "helmet";
 import errorHandler from "./middleware/errorHandler.js";
@@ -8,19 +7,34 @@ import logger from "./utils/logger.js";
 import { connectToRabbitMQ, consumeEvent } from "./utils/rabbitmq.js";
 import searchRoutes from "./routes/search-routes.js";
 import { handlePostCreated, handlePostDeleted } from "./eventHandlers/search-event-handlers.js";
+import rateLimit from "express-rate-limit";
+import RedisStore from "rate-limit-redis";
+import Redis from "ioredis";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3004;
 
-//connect to mongodb
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => logger.info("Connected to mongodb"))
   .catch((e) => logger.error("Mongo connection error", e));
 
-// const redisClient = new Redis(process.env.REDIS_URL);
+
+const redisClient = new Redis(process.env.REDIS_URL);
+
+const sensitiveLimiter = rateLimit({
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.call(...args),
+  }),
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: "Too many requests from this IP, please try again later.",
+  keyGenerator: (req) => req.ip,
+});
+
+app.use("/api/search/sensitive", sensitiveLimiter);
 
 //middleware
 app.use(helmet());
@@ -33,9 +47,15 @@ app.use((req, res, next) => {
   next();
 });
 
-//*** Homework - implement Ip based rate limiting for sensitive endpoints
+app.use(
+  "/api/posts",
+  (req, res, next) => {
+    req.redisClient = redisClient;
+    next();
+  },
+  searchRoutes
+);
 
-//*** Homework - pass redis client as part of your req and then implement redis caching
 app.use("/api/search", searchRoutes);
 
 app.use(errorHandler);
@@ -44,7 +64,6 @@ async function startServer() {
   try {
     await connectToRabbitMQ();
 
-    //consume the events / subscribe to the events
     await consumeEvent("post.created", handlePostCreated);
     await consumeEvent("post.deleted", handlePostDeleted);
 
@@ -58,3 +77,8 @@ async function startServer() {
 }
 
 startServer();
+
+//unhandled promise rejection
+process.on("unhandledRejection", (reason, promise) => {
+  logger.error("Unhandled Rejection at", promise, "reason:", reason);
+});

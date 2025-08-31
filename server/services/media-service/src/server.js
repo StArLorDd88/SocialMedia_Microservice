@@ -1,4 +1,5 @@
 import express from "express";
+import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cors from "cors";
 import helmet from "helmet";
@@ -13,7 +14,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3003;
 
-//connect to mongodb
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => logger.info("Connected to mongodb"))
@@ -29,7 +29,17 @@ app.use((req, res, next) => {
   next();
 });
 
-//*** Homework - implement Ip based rate limiting for sensitive endpoints
+const sensitiveLimiter = rateLimit({
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.call(...args),
+  }),
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: "Too many requests from this IP, please try again later.",
+  keyGenerator: (req) => req.ip,
+});
+
+app.use("/api/media/sensitive", sensitiveLimiter);
 
 app.use("/api/media", mediaRoutes);
 
@@ -39,7 +49,6 @@ async function startServer() {
   try {
     await connectToRabbitMQ();
 
-    //consume all the events
     await consumeEvent("post.deleted", handlePostDeleted);
 
     app.listen(PORT, () => {
@@ -53,7 +62,6 @@ async function startServer() {
 
 startServer();
 
-//unhandled promise rejection
 process.on("unhandledRejection", (reason, promise) => {
   logger.error("Unhandled Rejection at", promise, "reason:", reason);
 });
